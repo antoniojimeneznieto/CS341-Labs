@@ -1,5 +1,7 @@
 precision highp float;
 
+#define EPSILON 1e-6
+
 #define MAX_RANGE 1e6
 //#define NUM_REFLECTIONS
 
@@ -163,6 +165,7 @@ bool ray_sphere_intersection(
 	}	
 }
 
+
 /*
 	Check for intersection of the ray with a given plane in the scene.
 */
@@ -182,6 +185,9 @@ bool ray_plane_intersection(
 	*/
 
 	// Compute the intersection point of the ray with the plane
+	plane_normal = normalize(plane_normal);
+	ray_direction = normalize(ray_direction);
+
     float denom = dot(ray_direction, plane_normal);
     if (abs(denom) < EPSILON) {
         // The ray is parallel to the plane, so there is no intersection
@@ -198,9 +204,19 @@ bool ray_plane_intersection(
         return false;
     }
 
-	// Compute the normal between the ray direction and the plane
-	normal = normalize(cross(plane_normal, cross(ray_direction, plane_normal)));
-	
+	vec3 intersection_point = ray_origin + t * ray_direction;
+
+	vec3 plane_center = plane_normal * plane_offset;
+
+
+	// Compute the normal at the intersection point
+	if (dot(plane_normal, ray_direction) > 0.) {
+		// We are viewing the back face of the plane, we flip the normal
+		normal = -plane_normal;
+	} else {
+		normal = plane_normal;
+	}
+
 	return true;
 }
 
