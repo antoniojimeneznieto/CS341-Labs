@@ -184,7 +184,7 @@ bool ray_plane_intersection(
 	- return whether there is an intersection in front of the viewer (t > 0)
 	*/
 
-	// Compute the intersection point of the ray with the plane
+	// Normalize the vectors
 	plane_normal = normalize(plane_normal);
 	ray_direction = normalize(ray_direction);
 
@@ -204,11 +204,6 @@ bool ray_plane_intersection(
         return false;
     }
 
-	vec3 intersection_point = ray_origin + t * ray_direction;
-
-	vec3 plane_center = plane_normal * plane_offset;
-
-
 	// Compute the normal at the intersection point
 	if (dot(plane_normal, ray_direction) > 0.) {
 		// We are viewing the back face of the plane, we flip the normal
@@ -218,6 +213,12 @@ bool ray_plane_intersection(
 	}
 
 	return true;
+
+
+
+	// NOT NEEDED BUT THEY MAY BE INTERESTING IN THE FUTURE
+	//vec3 intersection_point = ray_origin + t * ray_direction;
+	//vec3 plane_center = plane_normal * plane_offset;
 }
 
 /*
