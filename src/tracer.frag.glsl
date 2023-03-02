@@ -181,11 +181,27 @@ bool ray_plane_intersection(
 	- return whether there is an intersection in front of the viewer (t > 0)
 	*/
 
-	// can use the plane center if you need it
-	vec3 plane_center = plane_normal * plane_offset;
-	t = MAX_RANGE + 10.;
-	//normal = ...;
-	return false;
+	// Compute the intersection point of the ray with the plane
+    float denom = dot(ray_direction, plane_normal);
+    if (abs(denom) < EPSILON) {
+        // The ray is parallel to the plane, so there is no intersection
+        return false;
+    }
+	
+	// Compute the distance along the ray to the intersection point
+    t = (plane_offset - dot(ray_origin, plane_normal)) / denom;
+
+	// If it's negative, the intersection is behind the viewer
+	// And if it's greater than the maximum range, it's too far away to
+	// be seen
+    if (t < 0. || t > MAX_RANGE) {
+        return false;
+    }
+
+	// Compute the normal between the ray direction and the plane
+	normal = normalize(cross(plane_normal, cross(ray_direction, plane_normal)));
+	
+	return true;
 }
 
 /*
