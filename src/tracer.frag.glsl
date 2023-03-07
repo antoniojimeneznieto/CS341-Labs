@@ -221,74 +221,74 @@ bool ray_plane_intersection(
 	//vec3 plane_center = plane_normal * plane_offset;
 }
 
-/*
-	Check for intersection of the ray with a given cylinder in the scene.
-*/
-bool ray_cylinder_intersection(
-		vec3 ray_origin, vec3 ray_direction, 
-		Cylinder cyl,
-		out float t, out vec3 normal) 
-{
-	/** #TODO RT1.2.2: 
-	- compute the ray's first valid intersection with the cylinder
-		(valid means in front of the viewer: t > 0)
-	- store intersection point in `intersection_point`
-	- store ray parameter in `t`
-	- store normal at intersection_point in `normal`.
-	- return whether there is an intersection with t > 0
-	*/
-	vec3 center = cyl.center;
-	vec3 axis = normalize(cyl.axis);
-	float radius = cyl.radius;
-	float height = cyl.height;
-	vec3 OC = ray_origin - center;
+bool ray_cylinder_intersection(vec3 ray_origin, vec3 ray_direction, Cylinder cyl, out float t, out vec3 normal) {
+	// Compute the vector from the cylinder center to the ray origin
+    vec3 cylinder_to_ray = ray_origin - cyl.center;
 
-	float a = dot(ray_direction - axis * dot(ray_direction, axis), ray_direction - axis * dot(ray_direction, axis));
-	float b = 2. * dot(ray_direction - axis * dot(ray_direction, axis), OC - axis * dot(OC, axis));
-	float c = dot(OC - axis * dot(OC, axis), OC - axis * dot(OC, axis)) - radius * radius;
+	 // Compute the coefficients of the quadratic equation for the intersection of the ray with the infinite cylinder
+    float a = dot(ray_direction - dot(ray_direction, cyl.axis) * cyl.axis, ray_direction - dot(ray_direction, cyl.axis) * cyl.axis);
+    float b = 2.0 * dot(ray_direction - dot(ray_direction, cyl.axis) * cyl.axis, cylinder_to_ray - dot(cylinder_to_ray, cyl.axis) * cyl.axis);
+    float c = dot(cylinder_to_ray - dot(cylinder_to_ray, cyl.axis) * cyl.axis, cylinder_to_ray - dot(cylinder_to_ray, cyl.axis) * cyl.axis) - cyl.radius * cyl.radius;
 
-	vec2 solutions;
-	int num_solutions = solve_quadratic(a, b, c, solutions);
+	// Compute the discriminant of the quadratic equation
+    float discriminant = b * b - 4.0 * a * c;
 
-	bool collision_happened = false;
-	vec3 intersection_point;
-	vec3 intersection_normal;
-	float min_t = MAX_RANGE + 10.;
+  	// If the discriminant is negative, there is no real intersection
+    if (discriminant < 0.0) {
+        return false;
+    }
 
-	for (int i = 0; i < 2; i++) {
-		float candidate_t = solutions[i];
-		vec3 candidate_point = ray_origin + ray_direction * candidate_t;
+	// Compute the two possible parameter values of the intersection point along the ray
+    float t0 = (-b - sqrt(discriminant)) / (2.0 * a);
+    float t1 = (-b + sqrt(discriminant)) / (2.0 * a);
 
-		// check if candidate point is within cylinder height
-		float z = dot(candidate_point - center, axis);
-		if (z < -0.5 * height || z > 0.5 * height) {
-			continue;
-		}
+	// Initialize variables for the intersection point, cylinder parameter value, and normal vector
+    vec3 intersection_point;
+    float t_cyl;
+    vec3 normal_cyl;
 
-		// update t
-		if (candidate_t > EPSILON && candidate_t < min_t) {
-			collision_happened = true;
-			min_t = candidate_t;
-			intersection_point = candidate_point;
+	// Check the first possible intersection point
+    if (t0 > 0.0) {
+        intersection_point = ray_origin + t0 * ray_direction;
 
-			intersection_normal = normalize(candidate_point - center - z * axis);
+		 // Compute the parameter value of the intersection point along the cylinder axis
+        t_cyl = dot(intersection_point - cyl.center, cyl.axis) / dot(cyl.axis, cyl.axis);
 
-			// Orient the normal towards the viewer
-            if (dot(ray_direction, intersection_normal) > 0.) {
-                intersection_normal = -intersection_normal;
-            }
-		}
-	}
+		// If the intersection point lies within the height range of the cylinder, compute the normal vector
+        if (t_cyl >= -0.5 * cyl.height && t_cyl <= 0.5 * cyl.height) {
+			// Compute the normal vector by taking the difference between the intersection point 
+			//and the cylinder center plus the projection of the intersection point onto the cylinder axis
+            normal_cyl = normalize(intersection_point - (cyl.center + t_cyl * cyl.axis));
 
-	if (collision_happened) {
-		t = min_t;
-		normal = intersection_normal;
-		return true;
-	} 
+			 // Flip the normal vector if necessary to ensure that it points in the correct direction relative to the ray
+            normal = dot(normal_cyl, ray_direction) < 0.0 ? normal_cyl : -normal_cyl;
+            t = t0;
+            return true;
+        }
+    }
 
-	return false;
+	// Check the second possible intersection point
+    if (t1 > 0.0) {
+        intersection_point = ray_origin + t1 * ray_direction;
+
+		 // Compute the parameter value of the intersection point along the cylinder axis
+        t_cyl = dot(intersection_point - cyl.center, cyl.axis) / dot(cyl.axis, cyl.axis);
+
+		// If the intersection point lies within the height range of the cylinder, compute the normal vector
+        if (t_cyl >= -0.5 * cyl.height && t_cyl <= 0.5 * cyl.height) {
+			// Compute the normal vector by taking the difference between the intersection point 
+			//and the cylinder center plus the projection of the intersection point onto the cylinder axis
+            normal_cyl = normalize(intersection_point - (cyl.center + t_cyl * cyl.axis));
+
+			// Flip the normal vector if necessary to ensure that it points in the correct direction relative to the ray
+            normal = dot(normal_cyl, ray_direction) < 0.0 ? normal_cyl : -normal_cyl;
+            t = t1;
+            return true;
+        }
+    }
+
+    return false;
 }
-
 
 /*
 	Check for intersection of the ray with any object in the scene.
