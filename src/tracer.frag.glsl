@@ -270,7 +270,13 @@ bool ray_cylinder_intersection(
 			collision_happened = true;
 			min_t = candidate_t;
 			intersection_point = candidate_point;
+
 			intersection_normal = normalize(candidate_point - center - z * axis);
+
+			// Orient the normal towards the viewer
+            if (dot(ray_direction, intersection_normal) > 0.) {
+                intersection_normal = -intersection_normal;
+            }
 		}
 	}
 
