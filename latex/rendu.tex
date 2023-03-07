@@ -1,0 +1,71 @@
+%Classic article
+\documentclass[12pt]{article}
+%Use the package "geometry" to define the page size
+\usepackage[margin=1in]{geometry}
+
+%package for aligning equations
+\usepackage{amsmath}
+
+\title{Ray-Cylinder Intersection}
+\author{Jules PERRIN, TODO}
+
+\begin{document}
+\maketitle
+
+We have a ray defined by his direction and his origin as such:
+\begin{align*}
+    x(t) = x_0 + u_0 t \\
+    y(t) = y_0 + u_1 t \\
+    z(t) = z_0 + u_2 t
+\end{align*}
+
+And the equation of a cylinder of radius $r$:
+\begin{align*}
+    y^2 + z^2 = r^2
+\end{align*}
+
+So we can just replace $y$ and $z$ in the cylinder equation by the ray equation:
+\begin{align*}
+    (y_0 + u_1 t)^2 + (z_0 + u_2 t)^2 = r^2
+\end{align*}
+
+And we get:
+\begin{align*}
+    u_1^2 t^2 + 2 u_1 y_0 t + y_0^2 + u_2^2 t^2 + 2 u_2 z_0 t + z_0^2 - r^2 = 0
+\end{align*}
+
+By grouping the terms we get:
+\begin{align*}
+    (u_1^2 + u_2^2)t^2 + (2 u_1 y_0 + 2 u_2 z_0)t + (y_0^2 + z_0^2 - r^2) = 0
+\end{align*}
+
+from here we can derive 3 parameters $a$, $b$ and $c$:
+\begin{align*}
+    a &= u_1^2 + u_2^2 \\
+    b &= 2 u_1 y_0 + 2 u_2 z_0 \\
+    c &= y_0^2 + z_0^2 - r^2
+\end{align*}
+
+So that we have the quadratic equation:
+\begin{align*}
+    at^2 + bt + c = 0
+\end{align*}
+
+That we can easily solve to get the intersection points:
+\begin{align*}
+    t &= \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+\end{align*}
+
+They are then 3 differents cases:
+\begin{enumerate}
+    \item $b^2 - 4ac < 0$: no intersection
+    \item $b^2 - 4ac = 0$: one intersection
+    \item $b^2 - 4ac > 0$: two intersections
+\end{enumerate}
+
+If we have two intersections, we can choose the one that is the closest to the origin of the ray.
+
+One last remark, here we just check for a cylinder of infinite height, but we can easily add a check for the height of the cylinder
+after computing the intersection points and just keep the ones that are actually in the cylinder.
+
+\end{document}

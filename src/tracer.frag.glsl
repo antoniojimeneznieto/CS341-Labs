@@ -1,6 +1,6 @@
 precision highp float;
 
-#define EPSILON 1e-6
+#define EPSILON 1e-12
 
 #define MAX_RANGE 1e6
 //#define NUM_REFLECTIONS
