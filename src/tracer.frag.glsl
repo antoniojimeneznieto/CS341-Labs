@@ -243,10 +243,12 @@ bool ray_cylinder_intersection(
 	float height = cyl.height;
 	vec3 OC = ray_origin - center;
 
+	/* Check theory.pdf to understand the derivation of the quadratic formula */
 	float a = dot(ray_direction - axis * dot(ray_direction, axis), ray_direction - axis * dot(ray_direction, axis));
 	float b = 2. * dot(ray_direction - axis * dot(ray_direction, axis), OC - axis * dot(OC, axis));
 	float c = dot(OC - axis * dot(OC, axis), OC - axis * dot(OC, axis)) - radius * radius;
 
+	// Solve quadratic equation to get intersection candidates
 	vec2 solutions;
 	int num_solutions = solve_quadratic(a, b, c, solutions);
 
@@ -255,6 +257,7 @@ bool ray_cylinder_intersection(
 	vec3 intersection_normal;
 	float min_t = MAX_RANGE + 10.;
 
+	// Check intersection candidates to find the first valid one
 	for (int i = 0; i < 2; i++) {
 		float candidate_t = solutions[i];
 		vec3 candidate_point = ray_origin + ray_direction * candidate_t;
@@ -265,7 +268,7 @@ bool ray_cylinder_intersection(
 			continue;
 		}
 
-		// update t
+		// Update t
 		if (candidate_t > EPSILON && candidate_t < min_t) {
 			collision_happened = true;
 			min_t = candidate_t;
@@ -280,6 +283,7 @@ bool ray_cylinder_intersection(
 		}
 	}
 
+	// Set output variables and return result
 	if (collision_happened) {
 		t = min_t;
 		normal = intersection_normal;
