@@ -1,7 +1,5 @@
 precision highp float;
 
-#define EPSILON 1e-12
-
 #define MAX_RANGE 1e6
 //#define NUM_REFLECTIONS
 
@@ -26,8 +24,10 @@ struct Cylinder {
 uniform Cylinder cylinders[NUM_CYLINDERS];
 #endif
 
-//#define SHADING_STRATEGY_COLOR
-//#define SHADING_STRATEGY_NORMALS
+#define SHADING_MODE_NORMALS 1
+#define SHADING_MODE_BLINN_PHONG 2
+#define SHADING_MODE_PHONG 3
+//#define SHADING_MODE
 
 // materials
 //#define NUM_MATERIALS
@@ -165,7 +165,6 @@ bool ray_sphere_intersection(
 	}	
 }
 
-
 /*
 	Check for intersection of the ray with a given plane in the scene.
 */
@@ -174,37 +173,11 @@ bool ray_plane_intersection(
 		vec3 plane_normal, float plane_offset, 
 		out float t, out vec3 normal) 
 {
-	// Normalize the vectors
-	plane_normal = normalize(plane_normal);
-	ray_direction = normalize(ray_direction);
-
-	// If ray is parallel to the plane, there is no intersection
-    float denom = dot(ray_direction, plane_normal);
-    if (abs(denom) < EPSILON) {
-        return false;
-    }
-	
-	// Compute the distance along the ray to the intersection point
-    t = (plane_offset - dot(ray_origin, plane_normal)) / denom;
-
-	// If the intersection is behind the viewer or too far away return false
-    if (t < 0. || t > MAX_RANGE) {
-        return false;
-    }
-
-	// If we are viewing the back face of the plane, we flip the normal
-	if (dot(plane_normal, ray_direction) > 0.) {
-		normal = -plane_normal;
-	} else {
-		normal = plane_normal;
-	}
-
-	return true;
-
-	/* NOT NEEDED BUT THEY MAY BE INTERESTING IN THE FUTURE:
-		vec3 intersection_point = ray_origin + t * ray_direction;
-		vec3 plane_center = plane_normal * plane_offset; 
-	*/
+	// can use the plane center if you need it
+	vec3 plane_center = plane_normal * plane_offset;
+	t = MAX_RANGE + 10.;
+	//normal = ...;
+	return false;
 }
 
 /*
@@ -215,58 +188,8 @@ bool ray_cylinder_intersection(
 		Cylinder cyl,
 		out float t, out vec3 normal) 
 {
-	vec3 center = cyl.center;
-	vec3 axis = normalize(cyl.axis);
-	float radius = cyl.radius;
-	float height = cyl.height;
-	vec3 OC = ray_origin - center;
-
-	/* Check theory.pdf to understand the derivation of the quadratic formula */
-	float a = dot(ray_direction - axis * dot(ray_direction, axis), ray_direction - axis * dot(ray_direction, axis));
-	float b = 2. * dot(ray_direction - axis * dot(ray_direction, axis), OC - axis * dot(OC, axis));
-	float c = dot(OC - axis * dot(OC, axis), OC - axis * dot(OC, axis)) - radius * radius;
-
-	// Solve quadratic equation to get intersection candidates
-	vec2 solutions;
-	int num_solutions = solve_quadratic(a, b, c, solutions);
-
-	bool collision_happened = false;
 	vec3 intersection_point;
-	vec3 intersection_normal;
-	float min_t = MAX_RANGE + 10.;
-
-	// Check intersection candidates to find the first valid one
-	for (int i = 0; i < 2; i++) {
-		float candidate_t = solutions[i];
-		vec3 candidate_point = ray_origin + ray_direction * candidate_t;
-
-		// check if candidate point is within cylinder height
-		float z = dot(candidate_point - center, axis);
-		if (z < -0.5 * height || z > 0.5 * height) {
-			continue;
-		}
-
-		// Update t
-		if (candidate_t > EPSILON && candidate_t < min_t) {
-			collision_happened = true;
-			min_t = candidate_t;
-			intersection_point = candidate_point;
-
-			intersection_normal = normalize(candidate_point - center - z * axis);
-
-			// Orient the normal towards the viewer
-            if (dot(ray_direction, intersection_normal) > 0.) {
-                intersection_normal = -intersection_normal;
-            }
-		}
-	}
-
-	// Set output variables and return result
-	if (collision_happened) {
-		t = min_t;
-		normal = intersection_normal;
-		return true;
-	} 
+	t = MAX_RANGE + 10.;
 
 	return false;
 }
@@ -358,6 +281,29 @@ vec3 lighting(
 		vec3 object_point, vec3 object_normal, vec3 direction_to_camera, 
 		Light light, Material mat) {
 
+	/** #TODO RT2.1: 
+	- compute the diffuse component
+	- make sure that the light is located in the correct side of the object
+	- compute the specular component 
+	- make sure that the reflected light shines towards the camera
+	- return the ouput color
+
+	You can use existing methods for `vec3` objects such as `mirror`, `reflect`, `norm`, `dot`, and `normalize`.
+	*/
+
+	/** #TODO RT2.2: 
+	- shoot a shadow ray from the intersection point to the light
+	- check whether it intersects an object from the scene
+	- update the lighting accordingly
+	*/
+
+
+	#if SHADING_MODE == SHADING_MODE_PHONG
+	#endif
+
+	#if SHADING_MODE == SHADING_MODE_BLINN_PHONG
+	#endif
+
 	return mat.color;
 }
 
@@ -365,6 +311,38 @@ vec3 lighting(
 Render the light in the scene using ray-tracing!
 */
 vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
+
+	/** #TODO RT2.1: 
+	- check whether the ray intersects an object in the scene
+	- if it does, compute the ambient contribution to the total intensity
+	- compute the intensity contribution from each light in the scene and store the sum in pix_color
+	*/
+
+	/** #TODO RT2.3.2: 
+	- create an outer loop on the number of reflections (see below for a suggested structure)
+	- compute lighting with the current ray (might be reflected)
+	- use the above formula for blending the current pixel color with the reflected one
+	- update ray origin and direction
+
+	We suggest you structure your code in the following way:
+
+	vec3 pix_color          = vec3(0.);
+	float reflection_weight = ...;
+
+	for(int i_reflection = 0; i_reflection < NUM_REFLECTIONS+1; i_reflection++) {
+		float col_distance;
+		vec3 col_normal = vec3(0.);
+		int mat_id      = 0;
+
+		...
+
+		Material m = get_material(mat_id); // get material of the intersected object
+
+		ray_origin        = ...;
+		ray_direction     = ...;
+		reflection_weight = ...;
+	}
+	*/
 
 	vec3 pix_color = vec3(0.);
 
@@ -374,6 +352,12 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
 	if(ray_intersection(ray_origin, ray_direction, col_distance, col_normal, mat_id)) {
 		Material m = get_material(mat_id);
 		pix_color = m.color;
+
+		#if NUM_LIGHTS != 0
+		// for(int i_light = 0; i_light < NUM_LIGHTS; i_light++) {
+		// // do something for each light lights[i_light]
+		// }
+		#endif
 	}
 
 	return pix_color;
@@ -403,11 +387,9 @@ void main() {
 
 	vec3 pix_color = vec3(0.);
 
-	#ifdef SHADING_STRATEGY_NORMALS
+	#if SHADING_MODE == SHADING_MODE_NORMALS
 	pix_color = render_normals(ray_origin, ray_direction);
-	#endif
-
-	#ifdef SHADING_STRATEGY_COLOR
+	#else
 	pix_color = render_light(ray_origin, ray_direction);
 	#endif
 
