@@ -173,11 +173,37 @@ bool ray_plane_intersection(
 		vec3 plane_normal, float plane_offset, 
 		out float t, out vec3 normal) 
 {
-	// can use the plane center if you need it
-	vec3 plane_center = plane_normal * plane_offset;
-	t = MAX_RANGE + 10.;
-	//normal = ...;
-	return false;
+	// Normalize the vectors
+	plane_normal = normalize(plane_normal);
+	ray_direction = normalize(ray_direction);
+
+	// If ray is parallel to the plane, there is no intersection
+    float denom = dot(ray_direction, plane_normal);
+    if (abs(denom) < EPSILON) {
+        return false;
+    }
+	
+	// Compute the distance along the ray to the intersection point
+    t = (plane_offset - dot(ray_origin, plane_normal)) / denom;
+
+	// If the intersection is behind the viewer or too far away return false
+    if (t < 0. || t > MAX_RANGE) {
+        return false;
+    }
+
+	// If we are viewing the back face of the plane, we flip the normal
+	if (dot(plane_normal, ray_direction) > 0.) {
+		normal = -plane_normal;
+	} else {
+		normal = plane_normal;
+	}
+
+	return true;
+
+	/* NOT NEEDED BUT THEY MAY BE INTERESTING IN THE FUTURE:
+		vec3 intersection_point = ray_origin + t * ray_direction;
+		vec3 plane_center = plane_normal * plane_offset; 
+	*/
 }
 
 /*
@@ -188,8 +214,58 @@ bool ray_cylinder_intersection(
 		Cylinder cyl,
 		out float t, out vec3 normal) 
 {
+	vec3 center = cyl.center;
+	vec3 axis = normalize(cyl.axis);
+	float radius = cyl.radius;
+	float height = cyl.height;
+	vec3 OC = ray_origin - center;
+
+	/* Check theory.pdf to understand the derivation of the quadratic formula */
+	float a = dot(ray_direction - axis * dot(ray_direction, axis), ray_direction - axis * dot(ray_direction, axis));
+	float b = 2. * dot(ray_direction - axis * dot(ray_direction, axis), OC - axis * dot(OC, axis));
+	float c = dot(OC - axis * dot(OC, axis), OC - axis * dot(OC, axis)) - radius * radius;
+
+	// Solve quadratic equation to get intersection candidates
+	vec2 solutions;
+	int num_solutions = solve_quadratic(a, b, c, solutions);
+
+	bool collision_happened = false;
 	vec3 intersection_point;
-	t = MAX_RANGE + 10.;
+	vec3 intersection_normal;
+	float min_t = MAX_RANGE + 10.;
+
+	// Check intersection candidates to find the first valid one
+	for (int i = 0; i < 2; i++) {
+		float candidate_t = solutions[i];
+		vec3 candidate_point = ray_origin + ray_direction * candidate_t;
+
+		// check if candidate point is within cylinder height
+		float z = dot(candidate_point - center, axis);
+		if (z < -0.5 * height || z > 0.5 * height) {
+			continue;
+		}
+
+		// Update t
+		if (candidate_t > EPSILON && candidate_t < min_t) {
+			collision_happened = true;
+			min_t = candidate_t;
+			intersection_point = candidate_point;
+
+			intersection_normal = normalize(candidate_point - center - z * axis);
+
+			// Orient the normal towards the viewer
+            if (dot(ray_direction, intersection_normal) > 0.) {
+                intersection_normal = -intersection_normal;
+            }
+		}
+	}
+
+	// Set output variables and return result
+	if (collision_happened) {
+		t = min_t;
+		normal = intersection_normal;
+		return true;
+	} 
 
 	return false;
 }
