@@ -174,39 +174,26 @@ bool ray_plane_intersection(
 		vec3 plane_normal, float plane_offset, 
 		out float t, out vec3 normal) 
 {
-	/** #TODO RT1.1:
-	The plane is described by its normal vec3(nx, ny, nz) and an offset d.
-	Point p belongs to the plane iff `dot(normal, p) = d`.
-
-	- compute the ray's ntersection of the plane
-	- if ray and plane are parallel there is no intersection
-	- otherwise compute intersection data and store it in `normal`, and `t` (distance along ray until intersection).
-	- return whether there is an intersection in front of the viewer (t > 0)
-	*/
-
 	// Normalize the vectors
 	plane_normal = normalize(plane_normal);
 	ray_direction = normalize(ray_direction);
 
+	// If ray is parallel to the plane, there is no intersection
     float denom = dot(ray_direction, plane_normal);
     if (abs(denom) < EPSILON) {
-        // The ray is parallel to the plane, so there is no intersection
         return false;
     }
 	
 	// Compute the distance along the ray to the intersection point
     t = (plane_offset - dot(ray_origin, plane_normal)) / denom;
 
-	// If it's negative, the intersection is behind the viewer
-	// And if it's greater than the maximum range, it's too far away to
-	// be seen
+	// If the intersection is behind the viewer or too far away return false
     if (t < 0. || t > MAX_RANGE) {
         return false;
     }
 
-	// Compute the normal at the intersection point
+	// If we are viewing the back face of the plane, we flip the normal
 	if (dot(plane_normal, ray_direction) > 0.) {
-		// We are viewing the back face of the plane, we flip the normal
 		normal = -plane_normal;
 	} else {
 		normal = plane_normal;
@@ -214,11 +201,10 @@ bool ray_plane_intersection(
 
 	return true;
 
-
-
-	// NOT NEEDED BUT THEY MAY BE INTERESTING IN THE FUTURE
-	//vec3 intersection_point = ray_origin + t * ray_direction;
-	//vec3 plane_center = plane_normal * plane_offset;
+	/* NOT NEEDED BUT THEY MAY BE INTERESTING IN THE FUTURE:
+		vec3 intersection_point = ray_origin + t * ray_direction;
+		vec3 plane_center = plane_normal * plane_offset; 
+	*/
 }
 
 /*
@@ -229,14 +215,6 @@ bool ray_cylinder_intersection(
 		Cylinder cyl,
 		out float t, out vec3 normal) 
 {
-	/** #TODO RT1.2.2: 
-	- compute the ray's first valid intersection with the cylinder
-		(valid means in front of the viewer: t > 0)
-	- store intersection point in `intersection_point`
-	- store ray parameter in `t`
-	- store normal at intersection_point in `normal`.
-	- return whether there is an intersection with t > 0
-	*/
 	vec3 center = cyl.center;
 	vec3 axis = normalize(cyl.axis);
 	float radius = cyl.radius;
