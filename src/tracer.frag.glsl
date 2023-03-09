@@ -375,14 +375,23 @@ vec3 lighting(
 	- update the lighting accordingly
 	*/
 
+	vec3 intensity;
+	vec3 diffuse;
+	vec3 specular;
+
+	vec3 lightSourceDirection = normalize(object_point - light.position);
 
 	#if SHADING_MODE == SHADING_MODE_PHONG
+	diffuse = light.color * max(0., mat.diffuse * dot(object_normal, lightSourceDirection));
+	specular = light.color * pow(max(0., mat.specular * dot(reflect(lightSourceDirection, object_normal), direction_to_camera)), mat.shininess);
+	intensity = diffuse + specular;
+
 	#endif
 
 	#if SHADING_MODE == SHADING_MODE_BLINN_PHONG
 	#endif
 
-	return mat.color;
+	return mat.color * intensity;
 }
 
 /*
@@ -428,14 +437,20 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
 	vec3 col_normal = vec3(0.);
 	int mat_id = 0;
 	if(ray_intersection(ray_origin, ray_direction, col_distance, col_normal, mat_id)) {
+		vec3 ray_direction = normalize(ray_direction);
+		vec3 object_point = ray_origin + col_distance * ray_direction;
+		vec3 direction_to_camera = normalize(-ray_direction);
+		
 		Material m = get_material(mat_id);
-		pix_color = m.color;
+		vec3 ambient = light_color_ambient * m.ambient;
+		vec3 intensity = ambient;
 
 		#if NUM_LIGHTS != 0
-		// for(int i_light = 0; i_light < NUM_LIGHTS; i_light++) {
-		// // do something for each light lights[i_light]
-		// }
+		for(int i_light = 0; i_light < NUM_LIGHTS; i_light++) {		
+			intensity += lighting(object_point, col_normal, direction_to_camera, lights[i_light], m);
+		}
 		#endif
+		pix_color = m.color * intensity;
 	}
 
 	return pix_color;
