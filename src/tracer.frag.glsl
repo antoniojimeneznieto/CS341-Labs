@@ -392,6 +392,8 @@ vec3 lighting(
     }
 
 
+	// Specular componet will depend on the shading mode
+
 	#if SHADING_MODE == SHADING_MODE_BLINN_PHONG
 		vec3 half_vector = normalize(light_direction + direction_to_camera);
 		float specular_factor = dot(object_normal, half_vector);
