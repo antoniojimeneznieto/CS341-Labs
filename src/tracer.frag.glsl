@@ -2,6 +2,8 @@ precision highp float;
 
 #define EPSILON 1e-6
 
+#define SHADOW_ACNE_OFFSET 1e-3
+
 #define MAX_RANGE 1e6
 //#define NUM_REFLECTIONS
 
@@ -157,7 +159,7 @@ bool ray_sphere_intersection(
 		t = solutions[1];
 	}
 
-	if (t < MAX_RANGE) {
+	if (t < MAX_RANGE && t > SHADOW_ACNE_OFFSET) {
 		vec3 intersection_point = ray_origin + ray_direction * t;
 		normal = (intersection_point - sphere_center) / sphere_radius;
 
@@ -189,7 +191,7 @@ bool ray_plane_intersection(
     t = (plane_offset - dot(ray_origin, plane_normal)) / denom;
 
 	// If the intersection is behind the viewer or too far away return false
-    if (t < 0. || t > MAX_RANGE) {
+    if (t < SHADOW_ACNE_OFFSET || t > MAX_RANGE) {
         return false;
     }
 
@@ -248,7 +250,7 @@ bool ray_cylinder_intersection(
 		}
 
 		// Update t
-		if (candidate_t > EPSILON && candidate_t < min_t) {
+		if (candidate_t > SHADOW_ACNE_OFFSET && candidate_t < min_t) {
 			collision_happened = true;
 			min_t = candidate_t;
 			intersection_point = candidate_point;
@@ -359,16 +361,6 @@ vec3 lighting(
 		vec3 object_point, vec3 object_normal, vec3 direction_to_camera, 
 		Light light, Material mat) {
 
-	/** #TODO RT2.1: 
-	- compute the diffuse component
-	- make sure that the light is located in the correct side of the object
-	- compute the specular component 
-	- make sure that the reflected light shines towards the camera
-	- return the ouput color
-
-	You can use existing methods for `vec3` objects such as `mirror`, `reflect`, `norm`, `dot`, and `normalize`.
-	*/
-
 	/** #TODO RT2.2: 
 	- shoot a shadow ray from the intersection point to the light
 	- check whether it intersects an object from the scene
@@ -385,19 +377,33 @@ vec3 lighting(
 	vec3 diffuse_color = vec3(0.0);
     vec3 specular_color = vec3(0.0);
 
+	// Shadow component
+    float shadow_value = 1.0; // set the default value to 1 (no shadow)
+
+    vec3 shadow_ray_origin = object_point + EPSILON * object_normal;
+    vec3 shadow_ray_direction = normalize(light.position - shadow_ray_origin);
+    float shadow_ray_distance;
+    vec3 shadow_ray_normal;
+    int shadow_ray_material_id;
+
+    if (ray_intersection(shadow_ray_origin, shadow_ray_direction, shadow_ray_distance, shadow_ray_normal, shadow_ray_material_id)) {
+        float light_distance = length(light.position - object_point);
+        if (shadow_ray_distance < light_distance) {
+            shadow_value = 0.0;
+        }
+    }
+
 	// Diffuse component
     float diffuse_factor = dot(object_normal, light_direction);
-    if (diffuse_factor > 0.0) {
+    if (diffuse_factor > 0.0 && shadow_value > 0.0) {
         diffuse_color = mat.color * mat.diffuse * light.color * diffuse_factor;
     }
 
-
 	// Specular componet will depend on the shading mode
-
 	#if SHADING_MODE == SHADING_MODE_BLINN_PHONG
 		vec3 half_vector = normalize(light_direction + direction_to_camera);
 		float specular_factor = dot(object_normal, half_vector);
-		if (specular_factor > 0.0) {
+		if (specular_factor > 0.0 && shadow_value > 0.0) {
 			specular_factor = pow(specular_factor, mat.shininess);
 			specular_color = specular_factor * mat.specular * light.color;
 		}
@@ -407,13 +413,13 @@ vec3 lighting(
 	#if SHADING_MODE == SHADING_MODE_PHONG
     	vec3 reflection_direction = reflect(-light_direction, object_normal);
 		float specular_factor = dot(reflection_direction, direction_to_camera);
-		if (specular_factor > 0.0) {
+		if (specular_factor > 0.0 && shadow_value > 0.0) {
        		specular_factor = pow(specular_factor, mat.shininess);
         	specular_color = mat.color * mat.specular * light.color * specular_factor;
     	}
 	#endif
 
-	return ambient_color + diffuse_color + specular_color;
+	return ambient_color + diffuse_color * shadow_value + specular_color * shadow_value;
 }
 
 /*
