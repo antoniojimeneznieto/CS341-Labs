@@ -375,23 +375,43 @@ vec3 lighting(
 	- update the lighting accordingly
 	*/
 
-	vec3 intensity;
-	vec3 diffuse;
-	vec3 specular;
+	// Ambient component
+    vec3 ambient_color = mat.color * mat.ambient * light.color;
 
-	vec3 lightSourceDirection = normalize(object_point - light.position);
+	// Light direction normalized
+    vec3 light_direction = normalize(light.position - object_point);
 
-	#if SHADING_MODE == SHADING_MODE_PHONG
-	diffuse = light.color * max(0., mat.diffuse * dot(object_normal, lightSourceDirection));
-	specular = light.color * pow(max(0., mat.specular * dot(reflect(lightSourceDirection, object_normal), direction_to_camera)), mat.shininess);
-	intensity = diffuse + specular;
+	// Define diffuse and specular vectors
+	vec3 diffuse_color = vec3(0.0);
+    vec3 specular_color = vec3(0.0);
 
-	#endif
+	// Diffuse component
+    float diffuse_factor = dot(object_normal, light_direction);
+    if (diffuse_factor > 0.0) {
+        diffuse_color = mat.color * mat.diffuse * light.color * diffuse_factor;
+    }
+
 
 	#if SHADING_MODE == SHADING_MODE_BLINN_PHONG
+		vec3 half_vector = normalize(light_direction + direction_to_camera);
+		float specular_factor = dot(object_normal, half_vector);
+		if (specular_factor > 0.0) {
+			specular_factor = pow(specular_factor, mat.shininess);
+			specular_color = specular_factor * mat.specular * light.color;
+		}
+
 	#endif
 
-	return mat.color * intensity;
+	#if SHADING_MODE == SHADING_MODE_PHONG
+    	vec3 reflection_direction = reflect(-light_direction, object_normal);
+		float specular_factor = dot(reflection_direction, direction_to_camera);
+		if (specular_factor > 0.0) {
+       		specular_factor = pow(specular_factor, mat.shininess);
+        	specular_color = mat.color * mat.specular * light.color * specular_factor;
+    	}
+	#endif
+
+	return ambient_color + diffuse_color + specular_color;
 }
 
 /*
