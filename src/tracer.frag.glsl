@@ -482,7 +482,8 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
 
             // Calculate reflection direction and origin
             vec3 reflection_direction = normalize(reflect(ray_direction, col_normal));
-            vec3 reflection_origin = object_point + EPSILON * reflection_direction;
+			float EPSILON_OFFSET = 0.001;
+            vec3 reflection_origin = object_point + EPSILON_OFFSET * reflection_direction;
 
             // Update ray direction and origin for next iteration
             ray_direction = reflection_direction;
