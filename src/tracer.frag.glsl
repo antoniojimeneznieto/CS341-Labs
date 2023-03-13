@@ -380,7 +380,7 @@ vec3 lighting(
 	// Shadow component
     float shadow_value = 1.0; // set the default value to 1 (no shadow)
 
-    vec3 shadow_ray_origin = object_point + EPSILON * object_normal;
+    vec3 shadow_ray_origin = object_point + SHADOW_ACNE_OFFSET * object_normal;
     vec3 shadow_ray_direction = normalize(light.position - shadow_ray_origin);
     float shadow_ray_distance;
     vec3 shadow_ray_normal;
@@ -481,7 +481,7 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
             pix_color += reflection_weight * m.color * intensity;
             // Calculate reflection direction and origin
             vec3 reflection_direction = normalize(reflect(ray_direction, col_normal));
-            vec3 reflection_origin = object_point + EPSILON * reflection_direction;
+            vec3 reflection_origin = object_point + SHADOW_ACNE_OFFSET * reflection_direction;
 
             // Update ray direction and origin for next iteration
             ray_direction = reflection_direction;
