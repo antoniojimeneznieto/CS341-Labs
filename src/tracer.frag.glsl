@@ -426,8 +426,7 @@ vec3 lighting(
 Render the light in the scene using ray-tracing!
 */
 vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
-
-	/** #TODO RT2.1: 
+		/** #TODO RT2.1: 
 	- check whether the ray intersects an object in the scene
 	- if it does, compute the ambient contribution to the total intensity
 	- compute the intensity contribution from each light in the scene and store the sum in pix_color
@@ -438,50 +437,66 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
 	- compute lighting with the current ray (might be reflected)
 	- use the above formula for blending the current pixel color with the reflected one
 	- update ray origin and direction
-
 	We suggest you structure your code in the following way:
-
 	vec3 pix_color          = vec3(0.);
 	float reflection_weight = ...;
-
 	for(int i_reflection = 0; i_reflection < NUM_REFLECTIONS+1; i_reflection++) {
 		float col_distance;
 		vec3 col_normal = vec3(0.);
 		int mat_id      = 0;
-
 		...
-
 		Material m = get_material(mat_id); // get material of the intersected object
-
 		ray_origin        = ...;
 		ray_direction     = ...;
 		reflection_weight = ...;
 	}
 	*/
 
-	vec3 pix_color = vec3(0.);
+    vec3 pix_color = vec3(0.);
+    float reflection_weight = 1.0;
 
-	float col_distance;
-	vec3 col_normal = vec3(0.);
-	int mat_id = 0;
-	if(ray_intersection(ray_origin, ray_direction, col_distance, col_normal, mat_id)) {
-		vec3 ray_direction = normalize(ray_direction);
-		vec3 object_point = ray_origin + col_distance * ray_direction;
-		vec3 direction_to_camera = normalize(-ray_direction);
-		
-		Material m = get_material(mat_id);
-		vec3 ambient = light_color_ambient * m.ambient;
-		vec3 intensity = ambient;
+    for(int i_reflection = 0; i_reflection < NUM_REFLECTIONS+1; i_reflection++) {
+        float col_distance;
+        vec3 col_normal = vec3(0.);
+        int mat_id = 0;
 
-		#if NUM_LIGHTS != 0
-		for(int i_light = 0; i_light < NUM_LIGHTS; i_light++) {		
-			intensity += lighting(object_point, col_normal, direction_to_camera, lights[i_light], m);
-		}
-		#endif
-		pix_color = m.color * intensity;
-	}
+		// Check for intersection with scene
+        if(ray_intersection(ray_origin, ray_direction, col_distance, col_normal, mat_id)) {
 
-	return pix_color;
+			// Calculate intersection point, direction to camera, and material properties
+            vec3 object_point = ray_origin + col_distance * ray_direction;
+            vec3 direction_to_camera = normalize(-ray_direction);
+            Material m = get_material(mat_id);
+
+			// Compute ambient and diffuse lighting contributions from each light source
+            vec3 ambient = light_color_ambient * m.ambient;
+            vec3 intensity = ambient;
+            #if NUM_LIGHTS != 0
+            for(int i_light = 0; i_light < NUM_LIGHTS; i_light++) {
+                intensity += lighting(object_point, col_normal, direction_to_camera, lights[i_light], m);
+            }
+            #endif
+
+			 // Add the color of the current object to the pixel color, scaled by the reflection weight
+            pix_color += reflection_weight * m.color * intensity;
+
+            // Calculate reflection direction and origin
+            vec3 reflection_direction = normalize(reflect(ray_direction, col_normal));
+            vec3 reflection_origin = object_point + EPSILON * reflection_direction;
+
+            // Update ray direction and origin for next iteration
+            ray_direction = reflection_direction;
+            ray_origin = reflection_origin;
+
+			 // Update reflection weight by multiplying it with the material's mirror factor
+            reflection_weight *= m.mirror;
+        } else {
+			 // If there is no intersection with the scene, break out of the loop
+            break;
+        }
+    }
+
+    return pix_color;
 }
 
 
