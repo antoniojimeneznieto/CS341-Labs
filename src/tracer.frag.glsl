@@ -457,6 +457,7 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
 
     for(int i_reflection = 0; i_reflection < NUM_REFLECTIONS+1; i_reflection++) {
         float col_distance;
+		float EPSILON_OFFSET = 0.001;
         vec3 col_normal = vec3(0.);
         int mat_id = 0;
 
@@ -479,10 +480,9 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
 
 			 // Add the color of the current object to the pixel color, scaled by the reflection weight
             pix_color += reflection_weight * m.color * intensity;
-
             // Calculate reflection direction and origin
             vec3 reflection_direction = normalize(reflect(ray_direction, col_normal));
-			float EPSILON_OFFSET = 0.001;
+			
             vec3 reflection_origin = object_point + EPSILON_OFFSET * reflection_direction;
 
             // Update ray direction and origin for next iteration
