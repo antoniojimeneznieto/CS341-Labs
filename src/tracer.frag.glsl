@@ -464,8 +464,8 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
         if(ray_intersection(ray_origin, ray_direction, col_distance, col_normal, mat_id)) {
 
 			// Calculate intersection point, direction to camera, and material properties
-            vec3 object_point = ray_origin + col_distance * ray_direction;
-            vec3 direction_to_camera = normalize(-ray_direction);
+            vec3 col_point = ray_origin + col_distance * ray_direction;
+            vec3 direction_to_camera = -ray_direction;
             Material m = get_material(mat_id);
 
 			// Compute ambient and diffuse lighting contributions from each light source
@@ -473,7 +473,7 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
             vec3 intensity = ambient;
             #if NUM_LIGHTS != 0
             for(int i_light = 0; i_light < NUM_LIGHTS; i_light++) {
-                intensity += lighting(object_point, col_normal, direction_to_camera, lights[i_light], m);
+                intensity += lighting(col_point, col_normal, direction_to_camera, lights[i_light], m);
             }
             #endif
 
@@ -481,13 +481,11 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
             pix_color += reflection_weight * m.color * intensity;
             // Calculate reflection direction and origin
             vec3 reflection_direction = normalize(reflect(ray_direction, col_normal));
-            vec3 reflection_origin = object_point + SHADOW_ACNE_OFFSET * reflection_direction;
+            vec3 reflection_origin = col_point + SHADOW_ACNE_OFFSET * reflection_direction;
 
-            // Update ray direction and origin for next iteration
+            // Update ray direction,origin and the reflection_weight for next iteration
             ray_direction = reflection_direction;
             ray_origin = reflection_origin;
-
-			 // Update reflection weight by multiplying it with the material's mirror factor
             reflection_weight *= m.mirror;
         } else {
 			 // If there is no intersection with the scene, break out of the loop
