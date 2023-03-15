@@ -362,7 +362,7 @@ vec3 lighting(
 		Light light, Material mat) {
 
 	// Ambient component
-    vec3 ambient_color = mat.color * mat.ambient * light.color;
+    vec3 ambient_color = vec3(0.0); // mat.color * mat.ambient * light.color;
 
 	// Light direction normalized
     vec3 light_direction = normalize(light.position - object_point);
@@ -380,6 +380,7 @@ vec3 lighting(
     vec3 shadow_ray_normal;
     int shadow_ray_material_id;
 
+	
     if (ray_intersection(shadow_ray_origin, shadow_ray_direction, shadow_ray_distance, shadow_ray_normal, shadow_ray_material_id)) {
         float light_distance = length(light.position - object_point);
         if (shadow_ray_distance < light_distance) {
@@ -390,12 +391,12 @@ vec3 lighting(
 	// Diffuse component
     float diffuse_factor = dot(object_normal, light_direction);
     if (diffuse_factor > 0.0 && shadow_value > 0.0) {
-        diffuse_color = mat.color * mat.diffuse * light.color * diffuse_factor;
+        diffuse_color = mat.diffuse * light.color * diffuse_factor;
     }
-
+	
 	// Specular componet will depend on the shading mode
 	#if SHADING_MODE == SHADING_MODE_BLINN_PHONG
-		vec3 half_vector = normalize(light_direction + direction_to_camera);
+		vec3 half_vector = normalize(direction_to_camera + light_direction);
 		float specular_factor = dot(object_normal, half_vector);
 		if (specular_factor > 0.0 && shadow_value > 0.0) {
 			specular_factor = pow(specular_factor, mat.shininess);
@@ -405,13 +406,14 @@ vec3 lighting(
 	#endif
 
 	#if SHADING_MODE == SHADING_MODE_PHONG
-    	vec3 reflection_direction = reflect(light_direction, object_normal);
+    	vec3 reflection_direction = normalize(reflect(-light_direction, object_normal));
 		float specular_factor = dot(reflection_direction, direction_to_camera);
 		if (specular_factor > 0.0 && shadow_value > 0.0) {
        		specular_factor = pow(specular_factor, mat.shininess);
-        	specular_color = mat.color * mat.specular * light.color * specular_factor;
+        	specular_color = specular_factor * mat.specular * light.color;
     	}
 	#endif
+	
 
 	return ambient_color + diffuse_color * shadow_value + specular_color * shadow_value;
 }
@@ -470,7 +472,7 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
                 intensity += lighting(col_point, col_normal, direction_to_camera, lights[i_light], m);
             }
             #endif
-
+			
 			 // Add the color of the current object to the pixel color, scaled by the reflection weight
             pix_color += reflection_weight * m.color * intensity;
             // Calculate reflection direction and origin
