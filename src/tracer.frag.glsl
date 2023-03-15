@@ -459,6 +459,7 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
 
 			// Calculate intersection point, direction to camera, and material properties
             vec3 col_point = ray_origin + col_distance * ray_direction;
+			vec3 direction_to_camera = -ray_direction;
             Material m = get_material(mat_id);
 
 			// Compute ambient and diffuse lighting contributions from each light source
@@ -466,7 +467,7 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
             vec3 intensity = ambient;
             #if NUM_LIGHTS != 0
             for(int i_light = 0; i_light < NUM_LIGHTS; i_light++) {
-                intensity += lighting(col_point, col_normal, ray_direction, lights[i_light], m);
+                intensity += lighting(col_point, col_normal, direction_to_camera, lights[i_light], m);
             }
             #endif
 			
