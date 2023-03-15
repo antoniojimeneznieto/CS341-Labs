@@ -472,7 +472,7 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
             #endif
 			
 			 // Add the color of the current object to the pixel color, scaled by the reflection weight
-            pix_color += reflection_weight * m.color * intensity;
+            pix_color += (1.0 - m.mirror) * reflection_weight * m.color * intensity;
             // Calculate reflection direction and origin
             vec3 reflection_direction = normalize(reflect(ray_direction, col_normal));
             vec3 reflection_origin = col_point + SHADOW_ACNE_OFFSET * reflection_direction;
