@@ -361,12 +361,6 @@ vec3 lighting(
 		vec3 object_point, vec3 object_normal, vec3 direction_to_camera, 
 		Light light, Material mat) {
 
-	/** #TODO RT2.2: 
-	- shoot a shadow ray from the intersection point to the light
-	- check whether it intersects an object from the scene
-	- update the lighting accordingly
-	*/
-
 	// Ambient component
     vec3 ambient_color = mat.color * mat.ambient * light.color;
 
@@ -411,7 +405,7 @@ vec3 lighting(
 	#endif
 
 	#if SHADING_MODE == SHADING_MODE_PHONG
-    	vec3 reflection_direction = reflect(-light_direction, object_normal);
+    	vec3 reflection_direction = reflect(light_direction, object_normal);
 		float specular_factor = dot(reflection_direction, direction_to_camera);
 		if (specular_factor > 0.0 && shadow_value > 0.0) {
        		specular_factor = pow(specular_factor, mat.shininess);
