@@ -470,9 +470,14 @@ vec3 render_light(vec3 ray_origin, vec3 ray_direction) {
                 intensity += lighting(col_point, col_normal, direction_to_camera, lights[i_light], m);
             }
             #endif
-			
+
+			// If there is no reflection, we don't take into account the absortivity
+			float absorptivity = 1.0;
+			if (NUM_REFLECTIONS > 0) {
+				absorptivity = 1.0 - m.mirror;
+			}
 			 // Add the color of the current object to the pixel color, scaled by the reflection weight
-            pix_color += (1.0 - m.mirror) * reflection_weight * m.color * intensity;
+            pix_color += absorptivity * reflection_weight * m.color * intensity;
             // Calculate reflection direction and origin
             vec3 reflection_direction = normalize(reflect(ray_direction, col_normal));
             vec3 reflection_origin = col_point + SHADOW_ACNE_OFFSET * reflection_direction;
