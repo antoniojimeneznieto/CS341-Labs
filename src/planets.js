@@ -102,7 +102,6 @@ export class SysOrbitalMovement {
 				radius = actor.orbit_radius
 			* Angle of orbit:
 				angle = sim_time * actor.orbit_speed + actor.orbit_phase
-
 		Spin around the planet's Z axis
 			angle = sim_time * actor.rotation_speed (radians)
 		
@@ -111,32 +110,40 @@ export class SysOrbitalMovement {
 			mat4.fromScaling takes a 3D vector!
 		*/
 
-		//const M_orbit = mat4.create();
+		const M_orbit = mat4.create();
+		const M_spin = mat4.create();
+		const M_scale = mat4.create();
 
-		if(actor.orbit !== null) {
-			// Parent's translation
-			const parent = actors_by_name[actor.orbit]
+		if (actor.orbit !== null) {
+			const parent = actors_by_name[actor.orbit];
 			const parent_translation_v = mat4.getTranslation([0, 0, 0], parent.mat_model_to_world)
+			
+			const radius = actor.orbit_radius;
+			const angle = sim_time * actor.orbit_speed + actor.orbit_phase;
+			const x = radius * Math.cos(angle);
+			const y = radius * Math.sin(angle);
+			const z = 0;
 
-			// Orbit around the parent
-		} 
-		
-		// Store the combined transform in actor.mat_model_to_world
-		//mat4_matmul_many(actor.mat_model_to_world, ...);
+			mat4.fromTranslation(M_orbit, vec3.add(vec3.create(), parent_translation_v, vec3.fromValues(x, y, z)));
+		}
+
+		const spin_angle = sim_time * actor.rotation_speed;
+		mat4.fromRotation(M_spin, spin_angle, vec3.fromValues(0, 0, 1));
+
+		mat4.fromScaling(M_scale, vec3.fromValues(actor.size, actor.size, actor.size));
+
+		mat4_matmul_many(actor.mat_model_to_world, M_orbit, M_spin, M_scale);
 	}
 
 	simulate(scene_info) {
+		const {sim_time, actors, actors_by_name} = scene_info;
 
-		const {sim_time, actors, actors_by_name} = scene_info
-
-		// Iterate over actors which have planet movement type
-		for(const actor of actors) {
-			if ( actor.movement_type === 'planet' ) {
-				this.calculate_model_matrix(actor, sim_time, actors_by_name)
+		for (const actor of actors) {
+			if (actor.movement_type === 'planet') {
+				this.calculate_model_matrix(actor, sim_time, actors_by_name);
 			}
 		}
 	}
-
 }
 
 /*
@@ -191,7 +198,7 @@ export class SysRenderPlanetsUnshaded {
 
 				// #TODO GL1.2.1.2
 				// Calculate mat_mvp: model-view-projection matrix	
-				//mat4_matmul_many(mat_mvp, ...)
+				mat4_matmul_many(mat_mvp, mat_projection, mat_view, actor.mat_model_to_world);
 
 				entries_to_draw.push({
 					mat_mvp: mat_mvp,
