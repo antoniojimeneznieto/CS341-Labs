@@ -134,9 +134,9 @@ async function main() {
 		*/
 
 		const cam_distance = cam_distance_base * cam_distance_factor;
-		const cam_x = cam_distance * Math.cos(cam_angle_y) * Math.sin(cam_angle_z);
-		const cam_y = cam_distance * Math.cos(cam_angle_y) * Math.cos(cam_angle_z);
-		const cam_z = cam_distance * Math.sin(cam_angle_y);
+		const cam_x = cam_distance * Math.sin(-cam_angle_y - Math.PI / 2) * Math.cos(-cam_angle_z);
+		const cam_y = cam_distance * Math.sin(-cam_angle_y - Math.PI / 2) * Math.sin(-cam_angle_z);
+		const cam_z = cam_distance * Math.cos(-cam_angle_y - Math.PI / 2);
 		const camera_position = [cam_x, cam_y, cam_z];
 
 		// Example camera matrix, looking along forward-X, edit this
@@ -148,7 +148,7 @@ async function main() {
 		
 		// Store the combined transform in mat_turntable
 		// frame_info.mat_turntable = A * B * ...
-		mat4_matmul_many(frame_info.mat_turntable, look_at) // edit this
+		mat4.copy(frame_info.mat_turntable, look_at); // edit this
 	}
 
 	update_cam_transform(frame_info)
@@ -329,6 +329,7 @@ async function main() {
 Hello! Sim time is ${scene_info.sim_time.toFixed(2)} s
 Camera: angle_z ${(frame_info.cam_angle_z / deg_to_rad).toFixed(1)}, angle_y ${(frame_info.cam_angle_y / deg_to_rad).toFixed(1)}, distance ${(frame_info.cam_distance_factor*cam_distance_base).toFixed(1)}
 cam pos ${vec_to_string(camera_position)}
+mat_world_to_cam ${mat4_to_string(mat_view)}
 `;
 	})
 }
