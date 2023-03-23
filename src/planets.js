@@ -127,7 +127,7 @@ export class SysOrbitalMovement {
 			mat4.fromTranslation(M_orbit, vec3.add(vec3.create(), parent_translation_v, vec3.fromValues(x, y, z)));
 		}
 
-		const spin_angle = sim_time * actor.rotation_speed;
+		const spin_angle = sim_time * actor.rotation_speed * Math.PI / 180;
 		mat4.fromRotation(M_spin, spin_angle, vec3.fromValues(0, 0, 1));
 
 		mat4.fromScaling(M_scale, vec3.fromValues(actor.size, actor.size, actor.size));
