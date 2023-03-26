@@ -22,7 +22,7 @@ void main() {
 		Assign your vertex-to-fragment varaiable.
 	*/
 	
-	vertex_to_fragment = vertex_normal;
+	vertex_to_fragment = mat_normals_to_view * vertex_normal; 
 
 	/* #TODO GL2.2.2
 		Transform the normals to camera space.
