@@ -40,9 +40,9 @@ function compute_triangle_normals_and_angle_weights(mesh) {
 		const angle3 = vec3.angle(edge31, edge23)
 
 		// Add your code for computing the angle weights
-		const weight1 = Math.abs(angle1) / (Math.abs(angle1) + Math.abs(angle2) + Math.abs(angle3))
-		const weight2 = Math.abs(angle2) / (Math.abs(angle1) + Math.abs(angle2) + Math.abs(angle3))
-		const weight3 = Math.abs(angle3) / (Math.abs(angle1) + Math.abs(angle2) + Math.abs(angle3))
+		const weight1 = Math.abs(angle1) / Math.PI
+		const weight2 = Math.abs(angle2) / Math.PI
+		const weight3 = Math.abs(angle3) / Math.PI
 
 		tri_normals.push(normal)
 		angle_weights.push([weight1, weight2, weight3])
@@ -79,7 +79,7 @@ function compute_vertex_normals(mesh, tri_normals, angle_weights) {
 
 	for(let i_vertex = 0; i_vertex < num_vertices; i_vertex++) {
 		// Normalize the vertices
-		vertex_normals[i_vertex] = vec3.normalize(vec3.create(), vertex_normals[i_vertex])
+		vec3.normalize(vertex_normals[i_vertex], vertex_normals[i_vertex])
 	}
 
 	return vertex_normals
