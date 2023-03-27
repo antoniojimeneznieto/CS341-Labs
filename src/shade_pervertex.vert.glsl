@@ -8,7 +8,7 @@ attribute vec3 vertex_normal;
 	Pass the values needed for per-pixel
 	Create a vertex-to-fragment variable.
 */
-//varying ...
+varying vec3 v2f_color;
 
 // Global variables specified in "uniforms" entry of the pipeline
 uniform mat4 mat_mvp;
@@ -30,5 +30,18 @@ void main() {
 	Hint: Compute the vertex position, normal and light_position in eye space.
 	Hint: Write the final vertex position to gl_Position
 	*/
+	vec4 vertex_position_view = mat_model_view * vec4(vertex_position, 1.0);
+	vec3 vertex_normal_view = normalize(mat_normals_to_view * vertex_normal);
+
+	vec3 N = vertex_normal_view;
+	vec3 L = normalize(light_position - vertex_position_view.xyz);
+	vec3 V = -normalize(vertex_position_view.xyz);
+	vec3 H = normalize(L + V);
+
+	float diffuse = max(dot(N, L), 0.0);
+	float specular = pow(max(dot(N, H), 0.0), material_shininess);
+
+	v2f_color = (material_ambient + diffuse) * material_color * light_color + specular * light_color;
+
 	gl_Position = mat_mvp * vec4(vertex_position, 1);
 }

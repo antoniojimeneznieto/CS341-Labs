@@ -4,7 +4,7 @@ precision mediump float;
 	Pass the normal to the fragment shader. 
 	Create a vertex-to-fragment variable.
 */
-varying vec3 vertex_to_fragment;
+varying vec3 v_normal;
 
 void main()
 {
@@ -13,7 +13,7 @@ void main()
 	*/
 	
 	// set the color from normals
-	vec3 color =  vertex_to_fragment * 0.5 + 0.5;
+	vec3 color =  v_normal * 0.5 + 0.5;
 
 	gl_FragColor = vec4(color, 1.); // output: RGBA in 0..1 range
 }
