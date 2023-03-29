@@ -3,7 +3,6 @@ attribute vec3 vertex_position;
 attribute vec3 vertex_normal;
 
 // Per-vertex outputs passed on to the fragment shader
-
 /* #TODO GL2.3
 	Pass the values needed for per-pixel
 	Create a vertex-to-fragment variable.
@@ -39,9 +38,12 @@ void main() {
 	vec3 H = normalize(L + V);
 
 	float diffuse = max(dot(N, L), 0.0);
-	float specular = pow(max(dot(N, H), 0.0), material_shininess);
+	float specular = 0.0;
+	if (diffuse > 0.0) {
+		specular = pow(max(dot(N, H), 0.0), material_shininess);
+	}
 
-	v2f_color = (material_ambient + diffuse) * material_color * light_color + specular * light_color;
+	v2f_color = (material_ambient * material_color + diffuse * material_color) * light_color + specular * material_color * light_color;
 
 	gl_Position = mat_mvp * vec4(vertex_position, 1);
 }
