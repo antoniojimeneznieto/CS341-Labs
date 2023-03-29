@@ -13,7 +13,8 @@ void main()
 	*/
 	
 	// set the color from normals
-	vec3 color =  v_normal * 0.5 + 0.5;
+	vec3 color =  normalize(v_normal) * 0.5 + 0.5;
+
 
 	gl_FragColor = vec4(color, 1.); // output: RGBA in 0..1 range
 }
