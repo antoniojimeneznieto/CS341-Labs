@@ -221,8 +221,6 @@ class SysRenderMeshes {
 			mat3.transpose(mat_normals_to_view, mat_normals_to_view)
 			mat3.invert(mat_normals_to_view, mat_normals_to_view)
 
-
-			
 			entries_to_draw.push({
 				mesh: this.resources[actor.mesh],
 				mat_mvp: mat_mvp,
