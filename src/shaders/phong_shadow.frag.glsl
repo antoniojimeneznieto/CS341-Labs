@@ -1,7 +1,7 @@
 precision highp float;
 
-//varying ...
-//varying ...
+varying vec3 v2f_normal;
+varying vec3 v2f_vertex_position;
 varying vec2 v2f_uv;
 
 
@@ -17,7 +17,7 @@ void main() {
 	/* #TODO GL3.1.1
 	Sample texture tex_color at UV coordinates and display the resulting color.
 	*/
-	vec3 material_color = vec3(v2f_uv, 0.);
+	vec3 material_color = texture2D(tex_color, v2f_uv).rgb;
 	
 	/*
 	#TODO GL3.3.1: Blinn-Phong with shadows and attenuation
@@ -48,6 +48,9 @@ void main() {
 
 	Make sure to normalize values which may have been affected by interpolation!
 	*/
+	
+	// Calculate the final color
 	vec3 color = light_color * material_color;
-	gl_FragColor = vec4(color, 1.); // output: RGBA in 0..1 range
+
+	gl_FragColor = vec4(color, 1.0); // Output: RGBA in 0..1 range
 }

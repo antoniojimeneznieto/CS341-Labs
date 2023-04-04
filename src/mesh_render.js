@@ -91,6 +91,16 @@ class SysRenderMeshes {
 		/* #TODO GL3.0 Copy mat_model_view, mat_mvp, mat_normals_to_view from GL2.2.2*/
 		// calculate mat_model_view, mat_mvp, mat_normals_to_view 
 
+		mat4_matmul_many(mat_mvp, mat_projection, mat_view, actor.mat_model_to_world)
+
+		// calculate mat_model_view
+		mat4_matmul_many(mat_model_view, mat_view, actor.mat_model_to_world)
+		
+		// calculate mat_normals_to_view
+		mat3.normalFromMat4(mat_normals_to_view, mat_model_view)
+		mat3.transpose(mat_normals_to_view, mat_normals_to_view)
+		mat3.invert(mat_normals_to_view, mat_normals_to_view)
+
 		return {mat_model_view, mat_mvp, mat_normals_to_view}
 	}
 
@@ -255,6 +265,13 @@ export class SysRenderMeshesWithLight extends SysRenderMeshes {
 				change the blend options
 			*/
 			blend: {
+				enable: true,
+				func: {
+					srcRGB: 'src alpha',
+					dstRGB: 'one minus src alpha',
+					srcAlpha: 1,
+					dstAlpha: 1,
+				},
 			},
 			
 

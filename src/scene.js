@@ -125,10 +125,11 @@ function meshes_construct(regl, resources) {
 		*/
 		vertex_tex_coords: [
 			[0, 0],
-			[1, 0],
-			[1, 1],
-			[0, 1],
+			[4, 0],
+			[4, 4],
+			[0, 4],
 		],
+		
 		faces: [
 			[0, 1, 2],
 			[0, 2, 3],
@@ -171,8 +172,9 @@ export async function load_resources(regl) {
 		https://github.com/regl-project/regl/blob/master/API.md#textures
 	*/
 	const tex_load_options = {
-		// wrap: ...
-	}
+		wrapS: 'repeat',
+		wrapT: 'repeat',
+	};
 	resource_promises[floor_tex_name] = load_texture(regl, `./textures/${floor_tex_name}`, tex_load_options)
 
 	// We load cube sides as images because we will put them into the cubemap constructor
