@@ -30,5 +30,8 @@ void main() {
 	// vertex position in camera coordinates
 	// transform normal to camera coordinates
 
+	v2f_normal = normalize(mat_normals_to_view * vertex_normal);
+	v2f_vertex_position = (mat_model_view * vec4(vertex_position, 1)).xyz;
+
 	gl_Position = mat_mvp * vec4(vertex_position, 1);
 }

@@ -14,6 +14,8 @@ void main() {
 
 	float material_shininess = 12.;
 
+	float m_a = 0.1;
+
 	/* #TODO GL3.1.1
 	Sample texture tex_color at UV coordinates and display the resulting color.
 	*/
@@ -51,6 +53,31 @@ void main() {
 	
 	// Calculate the final color
 	vec3 color = light_color * material_color;
+
+	vec3 light_direction = normalize(light_position - v2f_vertex_position);
+	vec3 direction_to_camera = normalize(v2f_vertex_position);
+
+	vec3 specular_color = vec3(0.0);
+	vec3 diffuse_color = vec3(0.0);
+
+	float diffuse_factor = dot(v2f_normal, light_direction);
+    if (diffuse_factor > 0.0) {
+        diffuse_color = material_color * light_color * diffuse_factor;
+    }
+
+	vec3 half_vector = normalize(direction_to_camera + light_direction);
+	float specular_factor = dot(v2f_normal, half_vector);
+	if (specular_factor > 0.0) {
+		specular_factor = pow(specular_factor, material_shininess);
+		specular_color = specular_factor * material_color * light_color;
+	}
+
+	float distance_to_light = length(light_position - v2f_vertex_position);
+	float distance_from_shadowmap = textureCube(cube_shadowmap, light_direction).z;
+	float tolerance = 1.01;
+	if (distance_to_light * tolerance >= distance_from_shadowmap) {
+		color = material_color * m_a  + (diffuse_color + specular_color)/(distance_to_light * distance_to_light);
+	}
 
 	gl_FragColor = vec4(color, 1.0); // Output: RGBA in 0..1 range
 }
