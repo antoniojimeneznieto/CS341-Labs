@@ -64,7 +64,27 @@ float perlin_noise_1d(float x) {
 	and interpolate these values 
 	using the smooth interolation polygnomial blending_weight_poly.
 	*/
-	return 0.;
+	// Determine the two grid points surrounding x
+    float c_0 = floor(x);
+    float c_1 = c_0 + 1.0;
+
+    // Compute the distances from x to the surrounding grid points
+    float dist_0 = x - c_0;
+    float dist_1 = x - c_1;
+
+    // Look up the gradients for the surrounding grid points
+    float g_0 = gradients(hash_func(vec2(c_0, 0.))).x;
+    float g_1 = gradients(hash_func(vec2(c_1, 0.))).x;
+
+    // Evaluate the linear functions described by the gradients
+    float phi_0 = g_0 * dist_0;
+    float phi_1 = g_1 * dist_1;
+
+    // Interpolate the values using the smooth interpolation polynomial
+    float alpha = blending_weight_poly(dist_0);
+    float noise = mix(phi_0, phi_1, alpha);
+
+    return noise;
 }
 
 float perlin_fbm_1d(float x) {
