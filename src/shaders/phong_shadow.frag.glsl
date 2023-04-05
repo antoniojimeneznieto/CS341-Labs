@@ -73,7 +73,7 @@ void main() {
 
     // Check for occlusion using the shadow map and apply a multiplicative tolerance
     float distance_from_shadowmap = textureCube(cube_shadowmap, -light_direction).r;
-    float tolerance = 1.01;
+    float tolerance = 1.02; // 1.02 and not 1.01 to prevent shadow acnee
 
     // Calculate the final color
     vec3 color = material_color * m_a; // Ambient component

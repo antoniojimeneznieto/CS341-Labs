@@ -341,7 +341,7 @@ export function create_scene_content_shadows() {
 			translation: [-2., -2., 0.],
 			scale: [1., 1., 1.],
 					
-			mesh: 'vase1.obj',
+			mesh: 'vase_centered.obj',
 
 			material: {
 				texture: 'tex_gold',
