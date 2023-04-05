@@ -85,9 +85,9 @@ export class EnvironmentCapture {
 		// please use mat4.perspective(mat4.create(), fovy, aspect, near, far);
 
 		// Construct the camera projection matrix with a correct light camera's view frustum
-		const fovy = deg_to_rad*90; // 90 degrees field of view in radians
-		const aspect = 1.0; // aspect ratio (since we're capturing a cube, it should be 1)
-		const near = 0.1; // near plane
+		const fovy = 90 * deg_to_rad; // 90 degrees field of view in radians
+		const aspect = 1; // aspect ratio (since we're capturing a cube, it should be 1)
+		const near = 1; // near plane
 		const far = 200.0; // far plane
 
 		this.cube_camera_projection = mat4.perspective(mat4.create(), fovy, aspect, near, far);

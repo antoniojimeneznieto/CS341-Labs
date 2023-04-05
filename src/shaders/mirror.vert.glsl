@@ -30,11 +30,11 @@ void main() {
     */
 
 	// Transform normal to camera coordinates
-	v2f_normal = mat_normals_to_view * vertex_normal;
+	v2f_normal = normalize(mat_normals_to_view * vertex_normal);
 
 		// Calculate view vector (from vertex in view coordinates to camera, camera is at vec3(0, 0, 0) in cam coords)
 	vec4 vertex_position_view = mat_model_view * vec4(vertex_position, 1.0);
-	v2f_dir_to_camera = -vertex_position_view.xyz;
+	v2f_dir_to_camera = -normalize(vertex_position_view.xyz);
 	
 	gl_Position = mat_mvp * vec4(vertex_position, 1);
 }

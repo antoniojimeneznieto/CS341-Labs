@@ -8,6 +8,7 @@ attribute vec2 vertex_tex_coords;
 varying vec3 v2f_normal;
 varying vec3 v2f_vertex_position;
 varying vec2 v2f_uv;
+varying vec3 v2f_viewing_vector;
 
 // Global variables specified in "uniforms" entry of the pipeline
 uniform mat4 mat_mvp;

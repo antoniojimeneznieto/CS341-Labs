@@ -72,12 +72,12 @@ void main() {
     float attenuation = 1.0 / (distance_to_light * distance_to_light);
 
     // Check for occlusion using the shadow map and apply a multiplicative tolerance
-    float distance_from_shadowmap = textureCube(cube_shadowmap, light_direction).z;
+    float distance_from_shadowmap = textureCube(cube_shadowmap, -light_direction).r;
     float tolerance = 1.01;
 
     // Calculate the final color
     vec3 color = material_color * m_a; // Ambient component
-    if (distance_to_light * tolerance >= distance_from_shadowmap) {
+    if (length(v2f_vertex_position - light_position) < distance_from_shadowmap * tolerance) {
         color += (diffuse_color + specular_color) * attenuation;
     }
 

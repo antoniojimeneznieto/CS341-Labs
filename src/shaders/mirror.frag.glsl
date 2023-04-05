@@ -19,11 +19,11 @@ void main()
 	*/
 
 	// Normalize the surface normal and view vector
-	vec3 normal = normalize(v2f_normal);
-	vec3 view_vector = normalize(v2f_dir_to_camera);
+	vec3 normal = v2f_normal;
+	vec3 view_vector = v2f_dir_to_camera;
 
 	// Calculate the reflected ray direction R
-	vec3 R = reflect(-view_vector, normal);
+	vec3 R = normalize(reflect(-view_vector, normal));
 
 	// Sample the environment map using the reflected direction
 	vec3 color = textureCube(cube_env_map, R).rgb;
