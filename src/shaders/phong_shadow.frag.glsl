@@ -14,7 +14,7 @@ void main() {
 
 	float material_shininess = 12.;
 
-	float m_a = 0.1;
+	float material_ambiance = 0.1;
 
 	/* #TODO GL3.1.1
 	Sample texture tex_color at UV coordinates and display the resulting color.
@@ -63,7 +63,7 @@ void main() {
     // Specular component
     vec3 half_vector = normalize(light_direction + direction_to_camera);
     float specular = pow(max(0.0, dot(normal, half_vector)), material_shininess);
-    vec3 specular_color = specular * material_color * light_color; // Specular color should be white
+    vec3 specular_color = specular * material_color * light_color;
 
     // Distance to the light
     float distance_to_light = length(light_position - v2f_vertex_position);
@@ -76,7 +76,7 @@ void main() {
     float tolerance = 1.02; // 1.02 and not 1.01 to prevent shadow acnee
 
     // Calculate the final color
-    vec3 color = material_color * m_a; // Ambient component
+    vec3 color = material_color * material_ambiance; // Ambient component
     if (length(v2f_vertex_position - light_position) < distance_from_shadowmap * tolerance) {
         color += (diffuse_color + specular_color) * attenuation;
     }
