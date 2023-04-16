@@ -96,7 +96,18 @@ float perlin_fbm_1d(float x) {
 	
 	Note: the GLSL `for` loop may be useful.
 	*/
-	return 0.;
+
+    float total_noise = 0.0;
+    float frequency = 1.0;
+    float amplitude = 1.0;
+
+    for (int octave = 0; octave < num_octaves; ++octave) {
+        total_noise += perlin_noise_1d(x * frequency) * amplitude;
+        frequency *= freq_multiplier;
+        amplitude *= ampl_multiplier;
+    }
+
+    return total_noise;
 }
 
 // ----- plotting -----
@@ -142,14 +153,44 @@ vec3 plots(vec2 point) {
 
 // ==============================================================
 // 2D Perlin noise evaluation
-
-
 float perlin_noise(vec2 point) {
 	/* #TODO PG1.4.1
 	Implement 2D perlin noise as described in the handout.
 	You may find a glsl `for` loop useful here, but it's not necessary.
 	*/
-	return 0.;
+    vec2 c_00 = floor(point);
+	vec2 c_10 = c_00 + vec2(1.0, 0.0);
+	vec2 c_01 = c_00 + vec2(0.0, 1.0);
+	vec2 c_11 = c_00 + vec2(1.0, 1.0);
+
+	// Compute the distances from x to the surrounding grid points
+	vec2 dist_00 = point - c_00;
+	vec2 dist_10 = point - c_10;
+	vec2 dist_01 = point - c_01;
+	vec2 dist_11 = point - c_11;
+
+	// Look up the gradients for the surrounding grid points
+	vec2 g_00 = gradients(hash_func(c_00)).xy;
+	vec2 g_10 = gradients(hash_func(c_10)).xy;
+	vec2 g_01 = gradients(hash_func(c_01)).xy;
+	vec2 g_11 = gradients(hash_func(c_11)).xy;
+
+	// Evaluate the linear functions described by the gradients
+	float phi_00 = dot(g_00, dist_00);
+	float phi_10 = dot(g_10, dist_10);
+	float phi_01 = dot(g_01, dist_01);
+	float phi_11 = dot(g_11, dist_11);
+
+	// Interpolate the values using the smooth interpolation polynomial
+	float alpha_x = blending_weight_poly(dist_00.x);
+	float alpha_y = blending_weight_poly(dist_00.y);
+
+	float phi_x0 = mix(phi_00, phi_10, alpha_x);
+	float phi_x1 = mix(phi_01, phi_11, alpha_x);
+
+	float noise = mix(phi_x0, phi_x1, alpha_y);
+
+	return noise;
 }
 
 vec3 tex_perlin(vec2 point) {
@@ -161,13 +202,22 @@ vec3 tex_perlin(vec2 point) {
 
 // ==============================================================
 // 2D Fractional Brownian Motion
-
 float perlin_fbm(vec2 point) {
 	/* #TODO PG1.4.2
 	Implement 2D fBm as described in the handout. Like in the 1D case, you
 	should use the constants num_octaves, freq_multiplier, and ampl_multiplier. 
 	*/
-	return 0.;
+    float total_noise = 0.0;
+    float frequency = 1.0;
+    float amplitude = 1.0;
+
+    for (int octave = 0; octave < num_octaves; ++octave) {
+        total_noise += perlin_noise(point * frequency) * amplitude;
+        frequency *= freq_multiplier;
+        amplitude *= ampl_multiplier;
+    }
+
+    return total_noise;
 }
 
 vec3 tex_fbm(vec2 point) {
@@ -191,7 +241,17 @@ float turbulence(vec2 point) {
 	Implement the 2D turbulence function as described in the handout.
 	Again, you should use num_octaves, freq_multiplier, and ampl_multiplier.
 	*/
-	return 0.;
+	float total_noise = 0.0;
+    float frequency = 1.0;
+    float amplitude = 1.0;
+
+    for (int octave = 0; octave < num_octaves; ++octave) {
+        total_noise += abs(perlin_noise(point * frequency)) * amplitude;
+        frequency *= freq_multiplier;
+        amplitude *= ampl_multiplier;
+    }
+
+    return total_noise;
 }
 
 vec3 tex_turbulence(vec2 point) {
@@ -213,7 +273,14 @@ vec3 tex_map(vec2 point) {
 	Implement your map texture evaluation routine as described in the handout. 
 	You will need to use your perlin_fbm routine and the terrain color constants described above.
 	*/
-	return vec3(0.);
+	float height = perlin_fbm(point);
+
+    if (height < terrain_water_level) {
+        return terrain_color_water;
+    } else {
+        float alpha = (height - terrain_water_level);
+        return mix(terrain_color_grass, terrain_color_mountain, alpha);
+    }
 }
 
 // ==============================================================
@@ -227,21 +294,40 @@ vec3 tex_wood(vec2 point) {
 	Implement your wood texture evaluation routine as described in thE handout. 
 	You will need to use your 2d turbulence routine and the wood color constants described above.
 	*/
-	return vec3(0.);
+    float t = turbulence(point);
+
+    // Calculate the radial distance ||p|| from the point to the origin
+    float radial_distance = length(point);
+
+    // Calculate alpha using the given formula
+    float alpha = 0.5 * (1.0 + sin(100.0 * (radial_distance + 0.15 * t)));
+
+    // Interpolate between dark and light brown colors using the alpha value
+    vec3 wood_color = mix(brown_dark, brown_light, alpha);
+
+    return wood_color;
+	
 }
 
 
 // ==============================================================
 // Procedural "marble" texture
-
-const vec3 white 			= vec3(0.95, 0.95, 0.95);
+const vec3 white = vec3(0.95, 0.95, 0.95);
 
 vec3 tex_marble(vec2 point) {
 	/* #TODO PG1.5.1.3
 	Implement your marble texture evaluation routine as described in the handout.
 	You will need to use your 2d fbm routine and the marble color constants described above.
 	*/
-	return vec3(0.);
+    vec2 q = vec2(perlin_fbm(point), perlin_fbm(point + vec2(1.7, 4.6)));
+
+    // Calculate alpha using the given formula
+    float alpha = 0.5 * (1.0 + perlin_fbm(point + 4.0 * q));
+
+    // Interpolate between the white color and the original point color using the alpha value
+    vec3 marble_color = mix(white, brown_dark, alpha);
+
+    return marble_color;
 }
 
 
