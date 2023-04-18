@@ -64,7 +64,12 @@ function terrain_build_mesh(height_map) {
 
 			The XY coordinates are calculated so that the full grid covers the square [-0.5, 0.5]^2 in the XY plane.
 			*/
-			vertices[idx] = [0, 0, 0]
+			if (elevation < WATER_LEVEL) {
+				elevation = WATER_LEVEL
+				normals[idx] = [0, 0, 1]
+			}
+
+			vertices[idx] = [gx / grid_width - 0.5, gy / grid_height - 0.5, elevation]
 		}
 	}
 
@@ -74,8 +79,13 @@ function terrain_build_mesh(height_map) {
 			Triangulate the grid cell whose lower lefthand corner is grid index (gx, gy).
 			You will need to create two triangles to fill each square.
 			*/
+			const v1 = xy_to_v_index(gx, gy)
+			const v2 = xy_to_v_index(gx + 1, gy)
+			const v3 = xy_to_v_index(gx, gy + 1)
+			const v4 = xy_to_v_index(gx + 1, gy + 1)
 
-			// faces.push([v1, v2, v3]) // adds a triangle on vertex indices v1, v2, v3
+			faces.push([v1, v2, v3]) // adds lower left triangle (green one in handout)
+			faces.push([v2, v4, v3]) // adds upper right triangle (blue one in handout)
 		}
 	}
 

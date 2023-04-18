@@ -122,7 +122,7 @@ async function main() {
 
 		// Store the combined transform in mat_turntable
 		// frame_info.mat_turntable = A * B * ...
-		mat4.copy(frame_info.mat_turntable, look_at);
+		mat4_matmul_many(mat_turntable, look_at);
 	}
 
 	update_cam_transform()
